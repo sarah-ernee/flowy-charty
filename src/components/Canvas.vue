@@ -5,7 +5,7 @@
     </v-btn>
 
     <div class="flowchart-container">
-      <Node v-for="node in nodes" :key="node.id" :node="node" />
+      <Flowchart />
     </div>
 
     <v-dialog v-model="showDialog" :style="{ maxWidth: '500px' }">
@@ -20,7 +20,6 @@
               aria-required="true"
               :rules="textfieldRules"
               required
-              @input="validateInput($event, 'title')"
             ></v-text-field>
 
             <v-text-field
@@ -29,7 +28,6 @@
               aria-required="true"
               :rules="textfieldRules"
               required
-              @input="validateInput($event, 'description')"
             ></v-text-field>
 
             <v-select
@@ -46,68 +44,52 @@
           <v-btn
             text
             @click="
-              showDialog = false;
+              $emit('close');
               resetForm();
             "
           >
             Cancel
           </v-btn>
-          <v-btn :disabled="!formValid" @click="createNode()">Create</v-btn>
+
+          <v-btn :disabled="!formValid" @click="submitNode()">Create</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </div>
 </template>
 
-<script setup>
+<script setup lang="js">
 import { ref } from "vue";
-import { useFlowchartStore } from "../stores/flowchartStore";
-import { storeToRefs } from "pinia";
+import Flowchart from "./Flowchart.vue";
 
-const store = useFlowchartStore();
-const { nodes } = storeToRefs(store);
-
-// Node creation properties
+// Form properties
 const newNode = ref({
   title: "",
   description: "",
   type: "",
 });
 
+const nodeTypes = ["sendMessage", "addComment", "businessHours"];
 const showDialog = ref(false);
 const formValid = ref(false);
 const textfieldRules = [
   (v) => !!v || "Field is required",
-  (v) => typeof v === "string" && isNaN(Number(v)) || "Field must be a string",
+  (v) =>
+    (typeof v === "string" && isNaN(Number(v))) || "Field must be a string",
 ];
-const nodeTypes = ["sendMessage", "addComment", "businessHours"];
 
-// Function to create a new node
-const createNode = () => {
-  if (!formValid.value) {
-    return;
-  }
-
-  nodes.value.push({
-    id: String(nodes.value.length + 1),
-    type: newNode.value.type,
-    position: { x: 50, y: 50 }, // Default position
-    data: {
-      label: newNode.value.title,
-      description: newNode.value.description,
-      icon: "📝",
-    },
-  });
-
-  resetForm();
-  showDialog.value = false;
-};
-
-// Reset form function
+// Form functions
 const resetForm = () => {
   newNode.value.title = "";
   newNode.value.description = "";
   newNode.value.type = "";
+};
+
+const submitNode = () => {
+  if (!formValid.value) return;
+
+  $emit("create", newNode.value);
+  resetForm();
 };
 </script>
 
@@ -132,17 +114,11 @@ const resetForm = () => {
 
 .flowchart-container {
   padding-top: 60px;
-}
-
-.node {
-  background: #f5f5f5;
-  border: 1px solid #e0dddd;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 4px;
+  height: 500px;
+  margin: auto;
 }
 
 .v-text-field {
-  margin: 0 0 12px 0;
+  margin-bottom: 4px;
 }
 </style>
