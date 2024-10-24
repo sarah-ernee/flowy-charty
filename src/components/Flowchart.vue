@@ -9,18 +9,55 @@
     :enable-connection-on-handle-hover="false"
     @connect="store.onConnect"
     @edge-update="store.onEdgeUpdate"
+    @node-click="showNodeDetails"
     :style="{ width: '100%', height: '90vh' }"
+  />
+  <router-view />
+
+  <NodeDetails
+    v-if="isDrawerOpen"
+    v-model="isDrawerOpen"
+    @close="closeDrawer()"
   />
 </template>
 
 <script setup>
+import { ref, watch } from "vue";
 import { VueFlow } from "@vue-flow/core";
 import CustomNode from "./CustomNode.vue";
+
 import { useFlowchartStore } from "../stores/flowchartStore";
 import { storeToRefs } from "pinia";
 
+import { useRouter } from "vue-router";
+import NodeDetails from "./NodeDetails.vue";
+
 const store = useFlowchartStore();
 const { nodes, edges } = storeToRefs(store);
+
+const router = useRouter();
+
+const isDrawerOpen = ref(false);
+
+const closeDrawer = () => {
+  isDrawerOpen.value = false;
+  router.push("/");
+};
+
+const showNodeDetails = (nodeId) => {
+  let id = nodeId.node.id;
+  router.push(`/node/${id}`);
+  isDrawerOpen.value = true;
+  console.log("Drawer should open:", isDrawerOpen.value);
+};
+
+// Add a watcher to monitor the isDrawerOpen value
+watch(
+  () => isDrawerOpen.value,
+  (newValue) => {
+    console.log("isDrawerOpen changed to:", newValue);
+  }
+);
 </script>
 
 <style>

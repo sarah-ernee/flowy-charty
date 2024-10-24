@@ -118,7 +118,7 @@ const submitNode = () => {
 .add-node-btn {
   position: absolute;
   top: 20px;
-  right: 20px;
+  left: 20px;
   text-transform: capitalize;
   background-color: #bb86fc;
   color: #181a1b;

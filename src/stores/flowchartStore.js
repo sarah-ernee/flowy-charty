@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 export const useFlowchartStore = defineStore("nodes", () => {
   const nodes = ref([
@@ -172,5 +172,62 @@ export const useFlowchartStore = defineStore("nodes", () => {
     onConnect(newConnection);
   };
 
-  return { nodes, edges, addNode, onConnect, onEdgeUpdate };
+  // Node details related function
+  const getNodeById = (nodeId) => {
+    return nodes.value.find((n) => n.id === nodeId);
+  };
+
+  const updateNode = (nodeId, newTitle, newDescription) => {
+    const node = getNodeById(nodeId);
+
+    if (!node) {
+      return;
+    }
+
+    node.label = node.label !== newTitle ? newTitle : node.label;
+    node.description =
+      node.description !== newDescription ? newTitle : node.description;
+  };
+
+  const deleteNode = (nodeId) => {
+    // Remove all edges connected to this node
+    edges.value = edges.value.filter(
+      (edge) => edge.source !== nodeId && edge.target !== nodeId
+    );
+
+    nodes.value = nodes.value.filter((node) => node.id !== nodeId);
+  };
+
+  const getNodeData = computed(() => (nodeId) => {
+    const node = getNodeById(nodeId);
+    if (!node) {
+      return {
+        label: "Node Not Found",
+        data: {
+          description: "",
+          icon: "",
+        },
+      };
+    }
+
+    return {
+      label: node.label,
+      data: {
+        description: node.data.description,
+        icon: node.data.icon,
+      },
+    };
+  });
+
+  return {
+    nodes,
+    edges,
+    addNode,
+    onConnect,
+    onEdgeUpdate,
+    getNodeById,
+    updateNode,
+    deleteNode,
+    getNodeData,
+  };
 });
