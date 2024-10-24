@@ -1,15 +1,21 @@
 <template>
   <div class="background">
-    <v-btn class="add-node-btn" @click="showDialog = true" variant="outlined">
+    <v-btn
+      class="add-node-btn"
+      @click="showDialog = true"
+      variant="outlined"
+      size="large"
+    >
       Create New Node
     </v-btn>
 
     <div class="flowchart-container">
       <Flowchart />
+      <!-- <Test /> -->
     </div>
 
     <v-dialog v-model="showDialog" :style="{ maxWidth: '500px' }">
-      <v-card :style="{ padding: '20px' }">
+      <v-card :style="{ padding: '10px' }">
         <v-card-title>Create New Node</v-card-title>
 
         <v-card-text>
@@ -58,9 +64,13 @@
   </div>
 </template>
 
-<script setup lang="js">
+<script setup>
 import { ref } from "vue";
+import { useFlowchartStore } from "../stores/flowchartStore";
 import Flowchart from "./Flowchart.vue";
+import Test from "./Test.vue";
+
+const store = useFlowchartStore();
 
 // Form properties
 const newNode = ref({
@@ -72,6 +82,7 @@ const newNode = ref({
 const nodeTypes = ["sendMessage", "addComment", "businessHours"];
 const showDialog = ref(false);
 const formValid = ref(false);
+
 const textfieldRules = [
   (v) => !!v || "Field is required",
   (v) =>
@@ -88,7 +99,8 @@ const resetForm = () => {
 const submitNode = () => {
   if (!formValid.value) return;
 
-  $emit("create", newNode.value);
+  store.addNode(newNode.value);
+  showDialog.value = false;
   resetForm();
 };
 </script>
@@ -108,8 +120,9 @@ const submitNode = () => {
   top: 20px;
   right: 20px;
   text-transform: capitalize;
-  background-color: #01579b;
-  color: white;
+  background-color: #bb86fc;
+  color: #181a1b;
+  font-weight: 650;
 }
 
 .flowchart-container {

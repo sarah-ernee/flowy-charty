@@ -1,5 +1,16 @@
 <template>
   <div class="custom-node">
+    <Handle
+      type="target"
+      position="top"
+      :style="{ top: '-5px' }"
+    />
+    <Handle
+      type="source"
+      position="bottom"
+      :style="{ bottom: '-5px' }"
+    />
+    
     <div class="node-header">
       <div class="node-icon">{{ data.icon }}</div>
       <div class="node-label">{{ label }}</div>
@@ -10,6 +21,7 @@
 </template>
 
 <script setup>
+import { Handle } from '@vue-flow/core';
 defineProps(["data", "label"]);
 </script>
 
@@ -19,15 +31,14 @@ defineProps(["data", "label"]);
   color: #e8e5e5;
   border-radius: 10px;
   border: 1px solid white;
-
   font-size: 18px;
   padding: 15px 10px;
   width: 250px;
-
   display: flex;
   flex-direction: column;
   align-items: left;
   justify-content: center;
+  position: relative; 
 }
 
 .node-header {
@@ -54,7 +65,6 @@ defineProps(["data", "label"]);
   display: flex;
   text-align: left;
   margin: 10px 0 0 6px;
-
   display: -webkit-box;
   -webkit-box-orient: vertical;
   line-clamp: 2;
