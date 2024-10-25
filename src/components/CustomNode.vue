@@ -1,28 +1,25 @@
 <template>
   <div class="custom-node">
-    <Handle
-      type="target"
-      position="top"
-      :style="{ top: '-5px' }"
-    />
-    <Handle
-      type="source"
-      position="bottom"
-      :style="{ bottom: '-5px' }"
-    />
-    
+    <Handle type="target" position="top" :style="{ top: '-5px' }" />
+    <Handle type="source" position="bottom" :style="{ bottom: '-5px' }" />
+
     <div class="node-header">
       <div class="node-icon">{{ data.icon }}</div>
       <div class="node-label">{{ label }}</div>
     </div>
 
-    <div class="node-description">{{ data.description }}</div>
+    <div class="node-description">
+      <div v-if="type === 'sendMessage'">Message: {{ data.text }}</div>
+      <div v-else>
+        {{ data.description }}
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { Handle } from '@vue-flow/core';
-defineProps(["data", "label"]);
+import { Handle } from "@vue-flow/core";
+defineProps(["type", "data", "label"]);
 </script>
 
 <style scoped>
@@ -38,7 +35,7 @@ defineProps(["data", "label"]);
   flex-direction: column;
   align-items: left;
   justify-content: center;
-  position: relative; 
+  position: relative;
 }
 
 .node-header {

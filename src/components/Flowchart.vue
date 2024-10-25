@@ -2,7 +2,12 @@
   <VueFlow
     v-model:nodes="nodes"
     v-model:edges="edges"
-    :node-types="{ custom: CustomNode }"
+    :node-types="{
+      trigger: CustomNode,
+      businessHours: CustomNode,
+      sendMessage: CustomNode,
+      addComment: CustomNode,
+    }"
     :default-viewport="{ zoom: 1.5 }"
     :fit-view-on-init="true"
     :connectable="true"
@@ -48,16 +53,7 @@ const showNodeDetails = (nodeId) => {
   let id = nodeId.node.id;
   router.push(`/node/${id}`);
   isDrawerOpen.value = true;
-  console.log("Drawer should open:", isDrawerOpen.value);
 };
-
-// Add a watcher to monitor the isDrawerOpen value
-watch(
-  () => isDrawerOpen.value,
-  (newValue) => {
-    console.log("isDrawerOpen changed to:", newValue);
-  }
-);
 </script>
 
 <style>
