@@ -11,7 +11,6 @@
 
     <div class="flowchart-container">
       <Flowchart />
-      <!-- <Test /> -->
     </div>
 
     <v-dialog v-model="showDialog" :style="{ maxWidth: '500px' }">
@@ -22,6 +21,7 @@
           <v-form ref="form" v-model="formValid">
             <v-text-field
               v-model="newNode.title"
+              variant="outlined"
               label="Title"
               aria-required="true"
               :rules="textfieldRules"
@@ -30,6 +30,7 @@
 
             <v-text-field
               v-model="newNode.description"
+              variant="outlined"
               label="Description"
               aria-required="true"
               :rules="textfieldRules"
@@ -38,8 +39,9 @@
 
             <v-select
               v-model="newNode.type"
-              :items="nodeTypes"
-              label="Type"
+              variant="outlined"
+              :items="['sendMessage', 'addComment', 'businessHours']"
+              label="Node Type"
               :rules="[(v) => !!v || 'Node type is required']"
               required
             ></v-select>
@@ -47,17 +49,10 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-btn
-            text
-            @click="
-              $emit('close');
-              resetForm();
-            "
-          >
-            Cancel
+          <v-btn :disabled="!formValid" @click="submitNode" class="create-btn">
+            Create Node
           </v-btn>
-
-          <v-btn :disabled="!formValid" @click="submitNode()">Create</v-btn>
+          <v-btn @click="closeDialog" class="cancel-btn">Cancel</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -65,21 +60,15 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
 import { useFlowchartStore } from "../stores/flowchartStore";
 import Flowchart from "./Flowchart.vue";
-import Test from "./Test.vue";
 
+const router = useRouter();
 const store = useFlowchartStore();
 
 // Form properties
-const newNode = ref({
-  title: "",
-  description: "",
-  type: "",
-});
-
-const nodeTypes = ["sendMessage", "addComment", "businessHours"];
 const showDialog = ref(false);
 const formValid = ref(false);
 
@@ -90,19 +79,38 @@ const textfieldRules = [
 ];
 
 // Form functions
+const newNode = ref({
+  title: "",
+  description: "",
+  type: "",
+});
+
 const resetForm = () => {
   newNode.value.title = "";
   newNode.value.description = "";
   newNode.value.type = "";
 };
 
+const closeDialog = () => {
+  showDialog.value = false;
+  resetForm();
+};
+
 const submitNode = () => {
   if (!formValid.value) return;
 
   store.addNode(newNode.value);
-  showDialog.value = false;
-  resetForm();
+  closeDialog();
 };
+
+// Clear up route on refresh
+onMounted(() => {
+  router.push("/");
+});
+
+onBeforeUnmount(() => {
+  closeDialog();
+});
 </script>
 
 <style scoped>
@@ -132,6 +140,20 @@ const submitNode = () => {
 }
 
 .v-text-field {
-  margin-bottom: 4px;
+  margin-bottom: 10px;
+}
+
+.create-btn,
+.cancel-btn {
+  text-transform: capitalize;
+}
+
+.create-btn {
+  background-color: #018786;
+}
+
+.cancel-btn {
+  background-color: grey;
+  color: white;
 }
 </style>

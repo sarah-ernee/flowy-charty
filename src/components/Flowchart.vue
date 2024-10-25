@@ -2,65 +2,77 @@
   <VueFlow
     v-model:nodes="nodes"
     v-model:edges="edges"
-    :node-types="{
-      trigger: CustomNode,
-      businessHours: CustomNode,
-      sendMessage: CustomNode,
-      addComment: CustomNode,
-    }"
-    :default-viewport="{ zoom: 1.5 }"
+    :node-types="nodeTypes"
+    :default-viewport="defaultViewport"
     :fit-view-on-init="true"
     :connectable="true"
     :enable-connection-on-handle-hover="false"
     @connect="store.onConnect"
     @edge-update="store.onEdgeUpdate"
     @node-click="showNodeDetails"
-    :style="{ width: '100%', height: '90vh' }"
+    class="vue-flow"
   />
   <router-view />
 
   <NodeDetails
     v-if="isDrawerOpen"
     v-model="isDrawerOpen"
-    @close="closeDrawer()"
+    @close="closeDrawer"
   />
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { VueFlow } from "@vue-flow/core";
-import CustomNode from "./CustomNode.vue";
-
-import { useFlowchartStore } from "../stores/flowchartStore";
 import { storeToRefs } from "pinia";
-
 import { useRouter } from "vue-router";
+import CustomNode from "./CustomNode.vue";
 import NodeDetails from "./NodeDetails.vue";
+import { useFlowchartStore } from "../stores/flowchartStore";
 
 const store = useFlowchartStore();
+const router = useRouter();
 const { nodes, edges } = storeToRefs(store);
 
-const router = useRouter();
-
 const isDrawerOpen = ref(false);
+const nodeTypes = {
+  trigger: CustomNode,
+  businessHours: CustomNode,
+  sendMessage: CustomNode,
+  addComment: CustomNode,
+};
+const defaultViewport = { zoom: 1.5 };
 
+// Event handlers
 const closeDrawer = () => {
   isDrawerOpen.value = false;
   router.push("/");
 };
 
-const showNodeDetails = (nodeId) => {
-  let id = nodeId.node.id;
-  router.push(`/node/${id}`);
+const showNodeDetails = ({ node }) => {
+  router.push(`/node/${node.id}`);
   isDrawerOpen.value = true;
 };
+
+// Clear up route on refresh
+onMounted(() => {
+  router.push("/");
+});
 </script>
 
 <style>
+.vue-flow {
+  width: 100%;
+  height: 90vh;
+}
+
 .vue-flow__handle {
-  width: 7px !important;
-  height: 7px !important;
-  background-color: #03dac6 !important;
+  --handle-size: 7px;
+  --handle-color: #03dac6;
+
+  width: var(--handle-size) !important;
+  height: var(--handle-size) !important;
+  background-color: var(--handle-color) !important;
   border-radius: 50% !important;
   opacity: 1 !important;
   transition: all 0.2s ease;
@@ -80,19 +92,16 @@ const showNodeDetails = (nodeId) => {
 }
 
 .vue-flow__handle:hover {
-  background-color: #03dac6 !important;
+  background-color: var(--handle-color) !important;
   transform: translateX(-50%) scale(1.2) !important;
 }
 
 .vue-flow__connection-path {
-  stroke: #03dac6;
+  stroke: var(--handle-color);
   stroke-width: 2;
 }
 
-.vue-flow__handle-connecting {
-  display: none !important;
-}
-
+.vue-flow__handle-connecting,
 .vue-flow__handle-valid {
   display: none !important;
 }

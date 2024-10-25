@@ -8,12 +8,10 @@
       :width="500"
     >
       <v-card variant="flat">
-        <v-card-title>
+        <v-card-title :style="{ marginBottom: '8px' }">
           <div :style="{ display: 'flex' }">
-            <div>{{ node.data.icon }}</div>
-            <span>
-              {{ node.label }}
-            </span>
+            <div>{{ node?.data?.icon }}</div>
+            <span>{{ node?.label }}</span>
           </div>
         </v-card-title>
 
@@ -21,13 +19,13 @@
           <v-text-field
             variant="outlined"
             density="compact"
-            v-model="node.label"
+            v-model="formData.label"
             label="Title"
           />
           <v-text-field
             variant="outlined"
             density="compact"
-            v-model="nodeData.description"
+            v-model="formData.description"
             label="Description"
           />
 
@@ -37,21 +35,65 @@
               density="compact"
               clearable
               clear-icon="mdi-close"
-              v-model="nodeData.comment"
+              v-model="formData.comment"
               label="Comment"
             />
           </div>
 
-          <div
-            v-if="node.type === 'sendMessage'"
-            :style="{ marginTop: '12px' }"
-          ></div>
+          <div v-if="node.type === 'sendMessage'">
+            <v-textarea
+              variant="outlined"
+              density="compact"
+              clearable
+              clear-icon="mdi-close"
+              v-model="formData.text"
+              label="Message"
+            />
+
+            <div v-if="formData.attachments && formData.attachments.length > 0">
+              <strong>Attachments:</strong>
+              <v-container>
+                <v-row>
+                  <v-col
+                    v-for="(attachment, index) in formData.attachments"
+                    :key="index"
+                    cols="4"
+                    class="d-flex ma-0 pa-1"
+                  >
+                    <v-img :src="attachment" alt="" aspect-ratio="1" />
+                    <v-btn
+                      icon="mdi-close"
+                      size="small"
+                      color="error"
+                      class="position-absolute top-0 right-0"
+                      @click="removeAttachment(index)"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </div>
+
+            <v-file-input
+              v-model="fileInput"
+              variant="outlined"
+              label="Click to Upload Attachment"
+              @update:model-value="handleFileUpload"
+              accept=".jpg, .jpeg, .png"
+              chips
+              clearable
+              prepend-icon=""
+              :disabled="formData.attachments?.length >= 6"
+              :class="{ 'custom-file-input': true }"
+            />
+          </div>
 
           <div
             v-if="node.type === 'businessHours'"
             :style="{ marginTop: '12px' }"
           >
-            <div v-for="(item, index) in nodeData.times" :key="index">
+            <div v-for="(item, index) in formData.times" :key="index">
               <v-row no-gutters height="42px">
                 <v-col cols="2">
                   <strong :style="{ margin: 'auto' }">{{ item.day }}:</strong>
@@ -62,32 +104,33 @@
                     type="time"
                     variant="outlined"
                     density="compact"
-                    v-model="item.startTime"
+                    v-model="formData.times[index].startTime"
                     :items="hourOptions"
                     label="Start Time"
-                /></v-col>
+                  />
+                </v-col>
 
                 <v-col cols="4" :style="{ margin: 'auto' }">
                   <v-text-field
                     type="time"
                     variant="outlined"
                     density="compact"
-                    v-model="item.endTime"
+                    v-model="formData.times[index].endTime"
                     :items="hourOptions"
                     label="End Time"
-                /></v-col>
+                  />
+                </v-col>
               </v-row>
             </div>
 
-            <!-- Timezone Selector -->
             <v-select
               variant="outlined"
               density="compact"
-              v-model="nodeData.timezone"
+              v-model="formData.timezone"
               :items="['UTC', 'PST', 'EST', 'CST', 'MST']"
               label="Timezone"
               :style="{ marginTop: '6px' }"
-            ></v-select>
+            />
           </div>
         </v-card-text>
 
@@ -134,20 +177,73 @@ const emit = defineEmits(["update:modelValue", "close"]);
 
 const route = useRoute();
 const store = useFlowchartStore();
+
 const node = ref(null);
-const nodeData = ref({});
+const fileInput = ref(null);
+
+// Create a separate form data object to store temporary changes
+const formData = ref({
+  label: "",
+  description: "",
+  comment: "",
+  text: "",
+  timezone: "UTC",
+  times: [],
+  attachments: [],
+});
 
 const hourOptions = Array.from(
   { length: 24 },
   (_, i) => String(i).padStart(2, "0") + ":00"
 );
 
+const handleFileUpload = async (files) => {
+  if (!files) return;
+
+  const fileArray = Array.isArray(files) ? files : [files];
+
+  for (const file of fileArray) {
+    if (!file.type.startsWith("image/")) {
+      console.error("Invalid file type:", file.type);
+      continue;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      console.error("File too large:", file.name);
+      continue;
+    }
+    if (formData.value.attachments?.length >= 6) {
+      console.error("Maximum attachments reached");
+      break;
+    }
+
+    // Here you would handle the file upload and update formData.attachments
+    // instead of directly updating the store
+  }
+
+  fileInput.value = null;
+};
+
+const removeAttachment = (index) => {
+  formData.value.attachments = formData.value.attachments.filter(
+    (_, i) => i !== index
+  );
+};
+
 watch(
   () => route.params.id,
   (newId) => {
-    console.log("watcher triggered", newId);
     node.value = store.getNodeData(newId);
-    nodeData.value = node.value.data;
+
+    // Initialize formData with node data
+    formData.value = {
+      label: node.value?.label || "",
+      description: node.value?.data?.description || "",
+      comment: node.value?.data?.comment || "",
+      text: node.value?.data?.text || "",
+      timezone: node.value?.data?.timezone || "UTC",
+      times: [...(node.value?.data?.times || [])],
+      attachments: [...(node.value?.data?.attachments || [])],
+    };
   },
   { immediate: true }
 );
@@ -163,16 +259,42 @@ const handleDeleteNode = () => {
 };
 
 const handleUpdateNode = () => {
-  const updated = store.updateNode(
+  // Only update the store when the update button is clicked
+  store.updateNode(
     route.params.id,
-    node.value.label,
-    node.value.data.description
+    formData.value.label,
+    formData.value.description
   );
-  if (updated) {
-    console.log("Node updated successfully.");
-  } else {
-    console.log("No changes made or node not found.");
+
+  if (node.type === "addComment") {
+    store.updateNode(route.params.id, {
+      data: {
+        ...node.value.data,
+        comment: formData.value.comment,
+      },
+    });
   }
+
+  if (node.type === "sendMessage") {
+    store.updateNode(route.params.id, {
+      data: {
+        ...node.value.data,
+        text: formData.value.text,
+        attachments: formData.value.attachments,
+      },
+    });
+  }
+
+  if (node.type === "businessHours") {
+    store.updateNode(route.params.id, {
+      data: {
+        ...node.value.data,
+        times: formData.value.times,
+        timezone: formData.value.timezone,
+      },
+    });
+  }
+
   emitClose();
 };
 </script>
@@ -207,5 +329,4 @@ const handleUpdateNode = () => {
 .close-btn {
   background-color: grey;
   color: white;
-}
-</style>
+}</style>
