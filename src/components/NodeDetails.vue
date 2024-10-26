@@ -1,13 +1,7 @@
 <template>
-  <v-app>
-    <v-navigation-drawer
-      :model-value="modelValue"
-      @update:model-value="$emit('update:modelValue', $event)"
-      permanent
-      location="right"
-      :width="500"
-    >
-      <v-card variant="flat">
+  <Transition name="slide">
+    <div v-if="modelValue" class="drawer-overlay">
+      <v-card class="drawer-card" variant="flat">
         <v-card-title :style="{ marginBottom: '8px' }">
           <div :style="{ display: 'flex' }">
             <div>{{ node?.data?.icon }}</div>
@@ -157,8 +151,8 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-    </v-navigation-drawer>
-  </v-app>
+    </div>
+  </Transition>
 </template>
 
 <script setup>
@@ -232,7 +226,7 @@ const removeAttachment = (index) => {
 watch(
   () => route.params.id,
   (newId) => {
-    node.value = store.getNodeData(newId);
+    node.value = store.getNodeById(newId);
 
     // Initialize formData with node data
     formData.value = {
@@ -300,15 +294,22 @@ const handleUpdateNode = () => {
 </script>
 
 <style scoped>
-.v-navigation-drawer {
-  height: 98vh !important;
-  overflow-y: hidden;
-  padding: 10px;
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
+  z-index: 1000;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.1);
 }
 
-.v-card {
-  width: 97%;
-  height: 100vh;
+.drawer-card {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  border-radius: 0;
 }
 
 .update-btn,
@@ -329,4 +330,20 @@ const handleUpdateNode = () => {
 .close-btn {
   background-color: grey;
   color: white;
-}</style>
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
+}
+</style>

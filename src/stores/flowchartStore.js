@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref } from "vue";
 
 import { initialNodes, initialEdges } from "../utils/initialData";
 import { createBaseNode, createNodeByType } from "../utils/nodeUtils";
@@ -7,6 +7,15 @@ import { createBaseNode, createNodeByType } from "../utils/nodeUtils";
 export const useFlowchartStore = defineStore("nodes", () => {
   const nodes = ref(initialNodes);
   const edges = ref(initialEdges);
+
+  // Crud functions related to node
+  const getNodeById = (nodeId) => {
+    let node = nodes.value.find((n) => n.id === nodeId);
+    if (!node) {
+      console.warn(`${nodeId} node was not found`);
+    }
+    return node;
+  };
 
   const addNode = (newNode) => {
     const id = (nodes.value.length + 1).toString();
@@ -23,10 +32,6 @@ export const useFlowchartStore = defineStore("nodes", () => {
     };
 
     nodes.value.push(newNodeObj);
-  };
-
-  const getNodeById = (nodeId) => {
-    return nodes.value.find((n) => n.id === nodeId);
   };
 
   const updateNode = (nodeId, newTitle, newDescription) => {
@@ -47,15 +52,6 @@ export const useFlowchartStore = defineStore("nodes", () => {
     nodes.value = nodes.value.filter((node) => node.id !== nodeId);
   };
 
-  // not sure why we need this
-  const getNodeData = computed(() => (nodeId) => {
-    let node = getNodeById(nodeId);
-    if (!node) {
-      throw new Error("failed to find that node");
-    }
-    return node;
-  });
-
   return {
     nodes,
     edges,
@@ -63,6 +59,6 @@ export const useFlowchartStore = defineStore("nodes", () => {
     getNodeById,
     updateNode,
     deleteNode,
-    getNodeData,
+    // getNodeData,
   };
 });

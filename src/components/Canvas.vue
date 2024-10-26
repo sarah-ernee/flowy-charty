@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
 
 .flowchart-container {
   padding-top: 60px;
-  height: 500px;
+  height: 750px;
   margin: auto;
 }
 

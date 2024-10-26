@@ -3,12 +3,12 @@
     v-model:nodes="nodes"
     v-model:edges="edges"
     :node-types="nodeTypes"
-    :default-viewport="defaultViewport"
+    :default-viewport="{ zoom: 2 }"
     :fit-view-on-init="true"
     :connectable="true"
-    :enable-connection-on-handle-hover="false"
-    @connect="store.onConnect"
-    @edge-update="store.onEdgeUpdate"
+    :enable-connection-on-handle-hover="true"
+    @connect="onConnect"
+    @edge-update="onEdgeUpdate"
     @node-click="showNodeDetails"
     class="vue-flow"
   />
@@ -41,7 +41,6 @@ const nodeTypes = {
   sendMessage: CustomNode,
   addComment: CustomNode,
 };
-const defaultViewport = { zoom: 1.5 };
 
 // Event handlers
 const closeDrawer = () => {
@@ -54,6 +53,20 @@ const showNodeDetails = ({ node }) => {
   isDrawerOpen.value = true;
 };
 
+const onConnect = ({ source, target }) => {
+  edges.value.push({
+    id: `e${source}-${target}`,
+    source,
+    target,
+    type: "smoothstep",
+  });
+};
+
+const onEdgeUpdate = (oldEdge, newConnection) => {
+  edges.value = edges.value.filter((e) => e.id !== oldEdge.id);
+  onConnect(newConnection);
+};
+
 // Clear up route on refresh
 onMounted(() => {
   router.push("/");
@@ -61,11 +74,6 @@ onMounted(() => {
 </script>
 
 <style>
-.vue-flow {
-  width: 100%;
-  height: 90vh;
-}
-
 .vue-flow__handle {
   --handle-size: 7px;
   --handle-color: #03dac6;
