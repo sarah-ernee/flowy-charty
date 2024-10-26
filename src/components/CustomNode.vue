@@ -9,7 +9,10 @@
     </div>
 
     <div class="node-description">
-      <div v-if="type === 'sendMessage'">Message: {{ data.text }}</div>
+      <div v-if="type === 'sendMessage'">
+        Message:
+        <em>{{ data.text === "" ? "No message added" : data.text }}</em>
+      </div>
       <div v-else>
         {{ data.description }}
       </div>
@@ -18,7 +21,9 @@
 </template>
 
 <script setup>
+import { defineProps } from "vue";
 import { Handle } from "@vue-flow/core";
+
 defineProps(["type", "data", "label"]);
 </script>
 

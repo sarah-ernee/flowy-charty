@@ -14,15 +14,11 @@
   />
   <router-view />
 
-  <NodeDetails
-    v-if="isDrawerOpen"
-    v-model="isDrawerOpen"
-    @close="closeDrawer"
-  />
+  <NodeDetails v-if="isDrawerOpen" @close="closeDrawer" />
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, shallowRef } from "vue";
 import { VueFlow } from "@vue-flow/core";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
@@ -36,10 +32,10 @@ const { nodes, edges } = storeToRefs(store);
 
 const isDrawerOpen = ref(false);
 const nodeTypes = {
-  trigger: CustomNode,
-  businessHours: CustomNode,
-  sendMessage: CustomNode,
-  addComment: CustomNode,
+  trigger: shallowRef(CustomNode),
+  businessHours: shallowRef(CustomNode),
+  sendMessage: shallowRef(CustomNode),
+  addComment: shallowRef(CustomNode),
 };
 
 // Event handlers

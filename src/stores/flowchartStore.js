@@ -12,7 +12,8 @@ export const useFlowchartStore = defineStore("nodes", () => {
   const getNodeById = (nodeId) => {
     let node = nodes.value.find((n) => n.id === nodeId);
     if (!node) {
-      console.warn(`${nodeId} node was not found`);
+      console.error(`${nodeId} node was not found`);
+      return;
     }
     return node;
   };
@@ -34,15 +35,53 @@ export const useFlowchartStore = defineStore("nodes", () => {
     nodes.value.push(newNodeObj);
   };
 
-  const updateNode = (nodeId, newTitle, newDescription) => {
-    const node = getNodeById(nodeId);
-    if (!node) return;
+  // const updateNode = (nodeId, updatedData) => {
+  //   const nodeIndex = nodes.value.findIndex((n) => n.id === nodeId);
+  //   if (nodeIndex === -1) {
+  //     console.error("Failed to update node");
+  //     return;
+  //   }
 
-    node.label = node.label !== newTitle ? newTitle : node.label;
-    node.description =
-      node.description !== newDescription ? newTitle : node.description;
+  //   nodes.value[nodeIndex] = {
+  //     ...nodes.value[nodeIndex],
+  //     label: updatedData.label || nodes.value[nodeIndex].label,
+  //     data: {
+  //       ...nodes.value[nodeIndex].data,
+  //       description: updatedData.description,
 
-    // need to expand to other node types also
+  //       // Type-specific updates
+  //       ...(updatedData.comment !== undefined && {
+  //         comment: updatedData.comment,
+  //       }),
+  //       ...(updatedData.text !== undefined && { text: updatedData.text }),
+  //       ...(updatedData.times !== undefined && { times: updatedData.times }),
+  //       ...(updatedData.timezone !== undefined && {
+  //         timezone: updatedData.timezone,
+  //       }),
+  //     },
+  //   };
+
+  //   // Sanity check to ensure reactivity
+  //   nodes.value = [...nodes.value];
+  // };
+
+  const updateNode = (id, updateData) => {
+    const nodeIndex = nodes.value.findIndex((node) => node.id === id);
+    if (nodeIndex !== -1) {
+      // Create a new nodes array with the updated node
+      nodes.value = nodes.value.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              label: updateData.label,
+              data: {
+                ...node.data,
+                ...updateData,
+              },
+            }
+          : node
+      );
+    }
   };
 
   const deleteNode = (nodeId) => {

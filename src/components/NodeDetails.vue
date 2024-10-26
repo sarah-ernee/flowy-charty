@@ -1,10 +1,10 @@
 <template>
   <Transition name="slide">
-    <div v-if="modelValue" class="drawer-overlay">
+    <div class="drawer-overlay">
       <v-card class="drawer-card" variant="flat">
         <v-card-title :style="{ marginBottom: '8px' }">
           <div :style="{ display: 'flex' }">
-            <div>{{ node?.data?.icon }}</div>
+            <div>{{ nodeData?.icon }}</div>
             <span>{{ node?.label }}</span>
           </div>
         </v-card-title>
@@ -15,31 +15,40 @@
             density="compact"
             v-model="formData.label"
             label="Title"
+            :error="!formData.label"
+            :error-messages="!formData.label ? 'Title cannot be empty' : ''"
+            required
+            :style="{ marginBottom: '4px' }"
           />
           <v-text-field
             variant="outlined"
             density="compact"
             v-model="formData.description"
             label="Description"
+            :error="!formData.description"
+            :error-messages="
+              !formData.description ? 'Description cannot be empty' : ''
+            "
+            required
           />
 
-          <div v-if="node.type === 'addComment'">
+          <div v-if="nodeType === 'addComment'">
             <v-text-field
               variant="outlined"
               density="compact"
               clearable
-              clear-icon="mdi-close"
+              clear-icon="mdi-close-circle"
               v-model="formData.comment"
               label="Comment"
             />
           </div>
 
-          <div v-if="node.type === 'sendMessage'">
+          <div v-if="nodeType === 'sendMessage'">
             <v-textarea
               variant="outlined"
               density="compact"
               clearable
-              clear-icon="mdi-close"
+              clear-icon="mdi-close-circle"
               v-model="formData.text"
               label="Message"
             />
@@ -78,13 +87,13 @@
               chips
               clearable
               prepend-icon=""
-              :disabled="formData.attachments?.length >= 6"
+              :disabled="formData.attachments.length >= 6"
               :class="{ 'custom-file-input': true }"
             />
           </div>
 
           <div
-            v-if="node.type === 'businessHours'"
+            v-if="nodeType === 'businessHours'"
             :style="{ marginTop: '12px' }"
           >
             <div v-for="(item, index) in formData.times" :key="index">
@@ -99,7 +108,6 @@
                     variant="outlined"
                     density="compact"
                     v-model="formData.times[index].startTime"
-                    :items="hourOptions"
                     label="Start Time"
                   />
                 </v-col>
@@ -110,7 +118,6 @@
                     variant="outlined"
                     density="compact"
                     v-model="formData.times[index].endTime"
-                    :items="hourOptions"
                     label="End Time"
                   />
                 </v-col>
@@ -133,7 +140,12 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-btn size="small" class="update-btn" @click="handleUpdateNode">
+          <v-btn
+            size="small"
+            class="update-btn"
+            @click="handleUpdateNode"
+            :disabled="!isFormValid"
+          >
             Update Node
           </v-btn>
 
@@ -141,12 +153,7 @@
             Delete Node
           </v-btn>
 
-          <v-btn
-            size="small"
-            variant="dark"
-            class="close-btn"
-            @click="emitClose"
-          >
+          <v-btn size="small" class="close-btn" @click="emit('close')">
             Close
           </v-btn>
         </v-card-actions>
@@ -156,26 +163,23 @@
 </template>
 
 <script setup>
-import { ref, watch, defineEmits, defineProps } from "vue";
+import { ref, watch, defineEmits, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useFlowchartStore } from "../stores/flowchartStore";
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
-});
-
-const emit = defineEmits(["update:modelValue", "close"]);
-
+const emit = defineEmits(["close"]);
 const route = useRoute();
 const store = useFlowchartStore();
 
 const node = ref(null);
-const fileInput = ref(null);
+const nodeData = ref(null);
+const nodeType = ref("");
 
-// Create a separate form data object to store temporary changes
+// Update form properties
+const isFormValid = computed(() => {
+  return formData.value.label?.trim() && formData.value.description?.trim();
+});
+
 const formData = ref({
   label: "",
   description: "",
@@ -186,10 +190,8 @@ const formData = ref({
   attachments: [],
 });
 
-const hourOptions = Array.from(
-  { length: 24 },
-  (_, i) => String(i).padStart(2, "0") + ":00"
-);
+// Functions for attachment
+const fileInput = ref(null);
 
 const handleFileUpload = async (files) => {
   if (!files) return;
@@ -223,74 +225,76 @@ const removeAttachment = (index) => {
   );
 };
 
+// Functions for node actions
+const handleDeleteNode = () => {
+  store.deleteNode(route.params.id);
+  emit("close");
+};
+
+const handleUpdateNode = () => {
+  const updateData = {
+    label: formData.value.label,
+    description: formData.value.description,
+  };
+
+  // Add type-specific data
+  if (nodeType.value === "addComment") {
+    updateData.comment = formData.value.comment;
+  } else if (nodeType.value === "sendMessage") {
+    updateData.text = formData.value.text;
+  } else if (nodeType.value === "businessHours") {
+    updateData.times = formData.value.times;
+    updateData.timezone = formData.value.timezone;
+  }
+
+  store.updateNode(route.params.id, updateData);
+
+  emit("close");
+};
+
+const initialize = (nodeId) => {
+  const currentNode = store.getNodeById(nodeId);
+
+  // Check explicitly to ensure value is available at the timing of access
+  if (currentNode) {
+    node.value = currentNode;
+    nodeData.value = currentNode.data;
+    nodeType.value = currentNode.type;
+
+    // Put current values to reflect them in the drawer
+    // Add defaults as failsafe in case nodeData inaccessible
+    formData.value = {
+      label: currentNode.label,
+      description: nodeData.value?.description || "",
+      comment: nodeData.value?.comment || "",
+      text: nodeData.value?.text || "",
+      timezone: nodeData.value?.timezone || "UTC",
+      times: [...(nodeData.value?.times || [])],
+      attachments: [...(nodeData.value?.attachments || [])],
+    };
+  } else {
+    console.error(`Node with id ${nodeId} not found`);
+    node.value = null;
+    nodeData.value = null;
+    nodeType.value = "";
+  }
+};
+
 watch(
   () => route.params.id,
   (newId) => {
-    node.value = store.getNodeById(newId);
-
-    // Initialize formData with node data
-    formData.value = {
-      label: node.value?.label || "",
-      description: node.value?.data?.description || "",
-      comment: node.value?.data?.comment || "",
-      text: node.value?.data?.text || "",
-      timezone: node.value?.data?.timezone || "UTC",
-      times: [...(node.value?.data?.times || [])],
-      attachments: [...(node.value?.data?.attachments || [])],
-    };
+    if (newId) {
+      initialize(newId);
+    }
   },
   { immediate: true }
 );
 
-const emitClose = () => {
-  emit("update:modelValue", false);
-  emit("close");
-};
-
-const handleDeleteNode = () => {
-  store.deleteNode(route.params.id);
-  emitClose();
-};
-
-const handleUpdateNode = () => {
-  // Only update the store when the update button is clicked
-  store.updateNode(
-    route.params.id,
-    formData.value.label,
-    formData.value.description
-  );
-
-  if (node.type === "addComment") {
-    store.updateNode(route.params.id, {
-      data: {
-        ...node.value.data,
-        comment: formData.value.comment,
-      },
-    });
+onMounted(() => {
+  if (route.params.id) {
+    initialize(route.params.id);
   }
-
-  if (node.type === "sendMessage") {
-    store.updateNode(route.params.id, {
-      data: {
-        ...node.value.data,
-        text: formData.value.text,
-        attachments: formData.value.attachments,
-      },
-    });
-  }
-
-  if (node.type === "businessHours") {
-    store.updateNode(route.params.id, {
-      data: {
-        ...node.value.data,
-        times: formData.value.times,
-        timezone: formData.value.timezone,
-      },
-    });
-  }
-
-  emitClose();
-};
+});
 </script>
 
 <style scoped>
