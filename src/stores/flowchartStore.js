@@ -37,8 +37,6 @@ export const useFlowchartStore = defineStore("nodes", () => {
       },
     };
 
-    console.log(newNodeObj.position);
-
     nodes.value.unshift(newNodeObj);
   };
 

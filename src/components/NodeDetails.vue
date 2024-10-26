@@ -205,7 +205,6 @@ const handleFileUpload = async (file) => {
   }
 
   formData.value.attachments.push(URL.createObjectURL(file));
-  console.log(formData.value.attachments);
   fileInput.value = null;
 };
 
