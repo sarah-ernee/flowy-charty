@@ -25,6 +25,11 @@ export const useFlowchartStore = defineStore("nodes", () => {
 
     const newNodeObj = {
       ...baseNode,
+      position: {
+        x: -300,
+        // Shift new nodes below previously created node
+        y: 20 + (nodes.value.length - 5) * 150,
+      },
       data: {
         ...baseNode.data,
         description: newNode.description,
@@ -32,38 +37,10 @@ export const useFlowchartStore = defineStore("nodes", () => {
       },
     };
 
-    nodes.value.push(newNodeObj);
+    console.log(newNodeObj.position);
+
+    nodes.value.unshift(newNodeObj);
   };
-
-  // const updateNode = (nodeId, updatedData) => {
-  //   const nodeIndex = nodes.value.findIndex((n) => n.id === nodeId);
-  //   if (nodeIndex === -1) {
-  //     console.error("Failed to update node");
-  //     return;
-  //   }
-
-  //   nodes.value[nodeIndex] = {
-  //     ...nodes.value[nodeIndex],
-  //     label: updatedData.label || nodes.value[nodeIndex].label,
-  //     data: {
-  //       ...nodes.value[nodeIndex].data,
-  //       description: updatedData.description,
-
-  //       // Type-specific updates
-  //       ...(updatedData.comment !== undefined && {
-  //         comment: updatedData.comment,
-  //       }),
-  //       ...(updatedData.text !== undefined && { text: updatedData.text }),
-  //       ...(updatedData.times !== undefined && { times: updatedData.times }),
-  //       ...(updatedData.timezone !== undefined && {
-  //         timezone: updatedData.timezone,
-  //       }),
-  //     },
-  //   };
-
-  //   // Sanity check to ensure reactivity
-  //   nodes.value = [...nodes.value];
-  // };
 
   const updateNode = (id, updateData) => {
     const nodeIndex = nodes.value.findIndex((node) => node.id === id);
@@ -76,7 +53,12 @@ export const useFlowchartStore = defineStore("nodes", () => {
               label: updateData.label,
               data: {
                 ...node.data,
-                ...updateData,
+                description: updateData.description,
+                comment: updateData.comment,
+                text: updateData.text,
+                timezone: updateData.timezone,
+                times: updateData.times,
+                attachments: updateData.attachments,
               },
             }
           : node
@@ -98,6 +80,5 @@ export const useFlowchartStore = defineStore("nodes", () => {
     getNodeById,
     updateNode,
     deleteNode,
-    // getNodeData,
   };
 });

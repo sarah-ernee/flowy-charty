@@ -1,5 +1,17 @@
-# Vue 3 + Vite
+# Flow Chart Application
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Built using Vite, Vue3 and Vue Flow library. Deployed on Vercel.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## How to Use
+1. Clone the repository.
+2. Install used dependencies and libraries with `npm i`.
+3. Serve localhost with `npm run dev`.
+
+## User Features
+1. Add 3 different types of nodes with 'Create New Node' button.
+2. Navigate flow chart canvas with pan, zoom and scroll.
+3. Connect nodes with one another by hovering near connection point.
+4. View basic node details.
+5. View detailed node information by clicking on node with nodeID reflected in route.
+6. Update node details in drawer according to node type. 
+7. Delete node. 

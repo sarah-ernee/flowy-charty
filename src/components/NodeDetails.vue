@@ -56,23 +56,23 @@
             <div v-if="formData.attachments && formData.attachments.length > 0">
               <strong>Attachments:</strong>
               <v-container>
-                <v-row>
+                <v-row :style="{ marginBottom: '10px' }">
                   <v-col
                     v-for="(attachment, index) in formData.attachments"
                     :key="index"
                     cols="4"
-                    class="d-flex ma-0 pa-1"
+                    :style="{ display: 'flex', margin: '0', padding: '1px' }"
                   >
-                    <v-img :src="attachment" alt="" aspect-ratio="1" />
-                    <v-btn
-                      icon="mdi-close"
-                      size="small"
-                      color="error"
-                      class="position-absolute top-0 right-0"
-                      @click="removeAttachment(index)"
-                    >
-                      <v-icon>mdi-delete</v-icon>
-                    </v-btn>
+                    <v-img
+                      :src="attachment"
+                      height="110"
+                      width="120"
+                      cover
+                      :style="{ borderRadius: '4px' }"
+                    />
+                    <v-icon small @click.stop="removeAttachment(index)">
+                      mdi-close-circle
+                    </v-icon>
                   </v-col>
                 </v-row>
               </v-container>
@@ -82,14 +82,12 @@
               v-model="fileInput"
               variant="outlined"
               label="Click to Upload Attachment"
+              center-affix
+              prepend-icon=""
+              prepend-inner-icon="mdi-paperclip"
               @update:model-value="handleFileUpload"
               accept=".jpg, .jpeg, .png"
-              chips
-              clearable
-              prepend-icon=""
-              :disabled="formData.attachments.length >= 6"
-              :class="{ 'custom-file-input': true }"
-            />
+            ></v-file-input>
           </div>
 
           <div
@@ -193,29 +191,21 @@ const formData = ref({
 // Functions for attachment
 const fileInput = ref(null);
 
-const handleFileUpload = async (files) => {
-  if (!files) return;
+const handleFileUpload = async (file) => {
+  if (!file) return;
 
-  const fileArray = Array.isArray(files) ? files : [files];
-
-  for (const file of fileArray) {
-    if (!file.type.startsWith("image/")) {
-      console.error("Invalid file type:", file.type);
-      continue;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      console.error("File too large:", file.name);
-      continue;
-    }
-    if (formData.value.attachments?.length >= 6) {
-      console.error("Maximum attachments reached");
-      break;
-    }
-
-    // Here you would handle the file upload and update formData.attachments
-    // instead of directly updating the store
+  if (formData.value.attachments.length >= 6) {
+    alert("Nodes have a limit of 6 attachments");
+    return;
   }
 
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Attachments larger than 2MB are not accepted: " + file.name);
+    return;
+  }
+
+  formData.value.attachments.push(URL.createObjectURL(file));
+  console.log(formData.value.attachments);
   fileInput.value = null;
 };
 
@@ -242,13 +232,13 @@ const handleUpdateNode = () => {
     updateData.comment = formData.value.comment;
   } else if (nodeType.value === "sendMessage") {
     updateData.text = formData.value.text;
+    updateData.attachments = formData.value.attachments;
   } else if (nodeType.value === "businessHours") {
     updateData.times = formData.value.times;
     updateData.timezone = formData.value.timezone;
   }
 
   store.updateNode(route.params.id, updateData);
-
   emit("close");
 };
 
@@ -349,5 +339,16 @@ onMounted(() => {
 .slide-enter-to,
 .slide-leave-from {
   transform: translateX(0);
+}
+
+.v-img {
+  position: relative;
+}
+
+.v-icon {
+  position: absolute;
+  cursor: pointer;
+  color: #b00020;
+  z-index: 10;
 }
 </style>
